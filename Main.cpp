@@ -6,7 +6,9 @@
 
 using namespace std;
 
-int main() {
+int WINAPI WinMain(
+	HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow
+) {
 	FileHandler fHandler = FileHandler();
 	MK8DX_Assets* Assets = new MK8DX_Assets();
 	vector<string> Players;
