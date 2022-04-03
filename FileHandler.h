@@ -1,6 +1,7 @@
 #pragma once
 
 #include <windows.h>
+#include <Lmcons.h>
 #include <filesystem>
 #include <fstream>
 #include <vector>

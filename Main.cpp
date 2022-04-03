@@ -12,8 +12,14 @@ int WINAPI WinMain(
 	FileHandler fHandler = FileHandler();
 	MK8DX_Assets* Assets = new MK8DX_Assets();
 	vector<string> Players;
-
-	string nameBaseFilePath = "C:/Users/CV/Documents/MK8DX Randomizer Assets";
+	
+	string strWinUserName = "";
+	char WinUserName[UNLEN + 1];
+	DWORD WinUserNameSize = sizeof(WinUserName);
+	GetUserNameA(WinUserName, &WinUserNameSize);
+	
+	strWinUserName = WinUserName;
+	string nameBaseFilePath = "C:/Users/" + strWinUserName + "/Documents/MK8DX Randomizer Assets";
 	string nameFilePath;
 	string ResolvedPath;
 

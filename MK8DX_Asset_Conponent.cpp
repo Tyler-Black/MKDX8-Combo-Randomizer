@@ -47,7 +47,7 @@ void MK8DX_Asset_Conponent::LoadHardcodedComponentFileTags() {
 	Acceleration_FileTag = "Acc";
 	On_Road_Traction_FileTag = "OnT";
 	Off_Road_Traction_FileTag = "OfT";
-	Mini_Turbo_FileTag = "MTo";
+	Mini_Turbo_FileTag = "MTb";
 	Ground_Speed_FileTag = "GSp";
 	Water_Speed_FileTag = "WSp";
 	Anti_Gravity_Speed_FileTag = "GSp";
