@@ -3,6 +3,8 @@
 #include <vector>
 #include <string>
 
+#include "FileHandler.h"
+
 using namespace std;
 
 class MK8DX_Asset_Conponent {
@@ -83,8 +85,36 @@ public:
 	void AssignValueByFileTag(string Tag, string Value);
 	void AssignValueByFileTag(string Tag, float Value);
 
-	string GetName();
+	void SetName(float newName);
+	void SetWeight(float newWeight);
+	void SetAcceleration(float newAcceleration);
+	void SetOn_Road_Traction(float newOn_Road_Traction);
+	void SetOff_Road_Traction(float newOff_Road_Traction);
+	void SetMini_Turbo(float newMini_Turbo);
+	void SetGround_Speed(float newGround_Speed);
+	void SetWater_Speed(float newWater_Speed);
+	void SetAnti_Gravity_Speed(float newAnti_Gravity_Speed);
+	void SetAir_Speed(float newAir_Speed);
+	void SetGround_Handling(float newGround_Handling);
+	void SetWater_Handling(float newWater_Handling);
+	void SetAnti_Gravity_Handling(float newAnti_Gravity_Handling);
+	void SetAir_Handling(float newAir_Handling);
 
-	string WriteComponentsToString();
-	string ComponentToStringAtResolution(float Component);
+	string GetName();
+	float GetWeight();
+	float GetAcceleration();
+	float GetOn_Road_Traction();
+	float GetOff_Road_Traction();
+	float GetMini_Turbo();
+	float GetGround_Speed();
+	float GetWater_Speed();
+	float GetAnti_Gravity_Speed();
+	float GetAir_Speed();
+	float GetGround_Handling();
+	float GetWater_Handling();
+	float GetAnti_Gravity_Handling();
+	float GetAir_Handling();
+
+	vector<string> WriteToVectorStringWithTag(FileHandler& fHandler);
+	vector<string> WriteComponentsToVectorStringWithTag(FileHandler& fHandler);
 };

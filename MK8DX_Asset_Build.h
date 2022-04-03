@@ -26,4 +26,18 @@ public:
 	MK8DX_Asset_Conponent* GetBody();
 	MK8DX_Asset_Conponent* GetTires();
 	MK8DX_Asset_Conponent* GetGlider();
+
+	float CalculateWeight();
+	float CalculateAcceleration();
+	float CalculateOn_Road_Traction();
+	float CalculateOff_Road_Traction();
+	float CalculateMini_Turbo();
+	float CalculateGround_Speed();
+	float CalculateWater_Speed();
+	float CalculateAnti_Gravity_Speed();
+	float CalculateAir_Speed();
+	float CalculateGround_Handling();
+	float CalculateWater_Handling();
+	float CalculateAnti_Gravity_Handling();
+	float CalculateAir_Handling();
 };

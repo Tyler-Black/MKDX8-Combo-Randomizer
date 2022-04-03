@@ -137,34 +137,130 @@ void MK8DX_Asset_Conponent::AssignValueByFileTag(string Tag, float Value) {
 	else if (Tag == Air_Handling_FileTag) Air_Handling = Value;
 }
 
+void MK8DX_Asset_Conponent::SetName(float newName) {
+	Name = newName;
+}
+void MK8DX_Asset_Conponent::SetWeight(float newWeight) {
+	Weight = newWeight;
+}
+void MK8DX_Asset_Conponent::SetAcceleration(float newAcceleration) {
+	Acceleration = newAcceleration;
+}
+void MK8DX_Asset_Conponent::SetOn_Road_Traction(float newOn_Road_Traction) {
+	On_Road_Traction = newOn_Road_Traction;
+}
+void MK8DX_Asset_Conponent::SetOff_Road_Traction(float newOff_Road_Traction) {
+	Off_Road_Traction = newOff_Road_Traction;
+}
+void MK8DX_Asset_Conponent::SetMini_Turbo(float newMini_Turbo) {
+	Mini_Turbo = newMini_Turbo;
+}
+void MK8DX_Asset_Conponent::SetGround_Speed(float newGround_Speed) {
+	Ground_Speed = newGround_Speed;
+}
+void MK8DX_Asset_Conponent::SetWater_Speed(float newWater_Speed) {
+	Water_Speed = newWater_Speed;
+}
+void MK8DX_Asset_Conponent::SetAnti_Gravity_Speed(float newAnti_Gravity_Speed) {
+	Anti_Gravity_Speed = newAnti_Gravity_Speed;
+}
+void MK8DX_Asset_Conponent::SetAir_Speed(float newAir_Speed) {
+	Air_Speed = newAir_Speed;
+}
+void MK8DX_Asset_Conponent::SetGround_Handling(float newGround_Handling) {
+	Ground_Handling = newGround_Handling;
+}
+void MK8DX_Asset_Conponent::SetWater_Handling(float newWater_Handling) {
+	Water_Handling = newWater_Handling;
+}
+void MK8DX_Asset_Conponent::SetAnti_Gravity_Handling(float newAnti_Gravity_Handling) {
+	Anti_Gravity_Handling = newAnti_Gravity_Handling;
+}
+void MK8DX_Asset_Conponent::SetAir_Handling(float newAir_Handling) {
+	Air_Handling = newAir_Handling;
+}
+
 string MK8DX_Asset_Conponent::GetName() {
 	return Name;
 }
-
-string MK8DX_Asset_Conponent::WriteComponentsToString() {
-	string Tag = "";
-	Tag += (Name + " ");																				Tag += "\n";
-	Tag += (Weight_FileTag + " " + ComponentToStringAtResolution(Weight));								Tag += "\n";
-	Tag += (Acceleration_FileTag + " " + ComponentToStringAtResolution(Acceleration));					Tag += "\n";
-	Tag += (On_Road_Traction_FileTag + " " + ComponentToStringAtResolution(On_Road_Traction));			Tag += "\n";
-	Tag += (Off_Road_Traction_FileTag + " " + ComponentToStringAtResolution(Off_Road_Traction));		Tag += "\n";
-	Tag += (Mini_Turbo_FileTag + " " + ComponentToStringAtResolution(Mini_Turbo));						Tag += "\n";
-	Tag += (Ground_Speed_FileTag + " " + ComponentToStringAtResolution(Ground_Speed));					Tag += "\n";
-	Tag += (Water_Speed_FileTag + " " + ComponentToStringAtResolution(Water_Speed));					Tag += "\n";
-	Tag += (Anti_Gravity_Speed_FileTag + " " + ComponentToStringAtResolution(Anti_Gravity_Speed));		Tag += "\n";
-	Tag += (Air_Speed_FileTag + " " + ComponentToStringAtResolution(Air_Speed));						Tag += "\n";
-	Tag += (Ground_Handling_FileTag + " " + ComponentToStringAtResolution(Ground_Handling));			Tag += "\n";
-	Tag += (Water_Handling_FileTag + " " + ComponentToStringAtResolution(Water_Handling));				Tag += "\n";
-	Tag += (Anti_Gravity_Handling_FileTag + " " + ComponentToStringAtResolution(Anti_Gravity_Handling));Tag += "\n";
-	Tag += (Air_Handling_FileTag + " " + ComponentToStringAtResolution(Air_Handling));					Tag += "\n";
-	return Tag;
+float MK8DX_Asset_Conponent::GetWeight() {
+	return Weight;
 }
-string MK8DX_Asset_Conponent::ComponentToStringAtResolution(float Component) {
-	string CompStr = to_string(Component);
-	size_t PointPosition = CompStr.find(".");
+float MK8DX_Asset_Conponent::GetAcceleration() {
+	return Acceleration;
+}
+float MK8DX_Asset_Conponent::GetOn_Road_Traction() {
+	return On_Road_Traction;
+}
+float MK8DX_Asset_Conponent::GetOff_Road_Traction() {
+	return Off_Road_Traction;
+}
+float MK8DX_Asset_Conponent::GetMini_Turbo() {
+	return Mini_Turbo;
+}
+float MK8DX_Asset_Conponent::GetGround_Speed() {
+	return Ground_Speed;
+}
+float MK8DX_Asset_Conponent::GetWater_Speed() {
+	return Water_Speed;
+}
+float MK8DX_Asset_Conponent::GetAnti_Gravity_Speed() {
+	return Anti_Gravity_Speed;
+}
+float MK8DX_Asset_Conponent::GetAir_Speed() {
+	return Air_Speed;
+}
+float MK8DX_Asset_Conponent::GetGround_Handling() {
+	return Ground_Handling;
+}
+float MK8DX_Asset_Conponent::GetWater_Handling() {
+	return Water_Handling;
+}
+float MK8DX_Asset_Conponent::GetAnti_Gravity_Handling() {
+	return Anti_Gravity_Handling;
+}
+float MK8DX_Asset_Conponent::GetAir_Handling() {
+	return Air_Handling;
+}
 
-	if (PointPosition != string::npos) {
-		return CompStr.substr(0, (int)(PointPosition + 3));
-	}
-	else return CompStr.substr(0, 4);
+vector<string> MK8DX_Asset_Conponent::WriteToVectorStringWithTag(FileHandler& fHandler) {
+	vector<string> rStrings;
+
+	rStrings.push_back(Weight_FileTag);
+	rStrings.push_back(Acceleration_FileTag);
+	rStrings.push_back(On_Road_Traction_FileTag);
+	rStrings.push_back(Off_Road_Traction_FileTag);
+	rStrings.push_back(Mini_Turbo_FileTag);
+	rStrings.push_back(Ground_Speed_FileTag);
+	rStrings.push_back(Water_Speed_FileTag);
+	rStrings.push_back(Anti_Gravity_Speed_FileTag);
+	rStrings.push_back(Air_Speed_FileTag);
+	rStrings.push_back(Ground_Handling_FileTag);
+	rStrings.push_back(Water_Handling_FileTag);
+	rStrings.push_back(Anti_Gravity_Handling_FileTag);
+	rStrings.push_back(Air_Handling_FileTag);
+
+	return rStrings;
+}
+vector<string> MK8DX_Asset_Conponent::WriteComponentsToVectorStringWithTag(FileHandler& fHandler) {
+	vector<string> rStrings = WriteToVectorStringWithTag(fHandler);
+
+	for (unsigned int x = 0; (x < rStrings.size()); x++) rStrings[x] += " ";
+	rStrings[0] += fHandler.FloatingToStringAtResolution(Weight, 2);
+	rStrings[1] += fHandler.FloatingToStringAtResolution(Acceleration, 2);
+	rStrings[2] += fHandler.FloatingToStringAtResolution(On_Road_Traction, 2);
+	rStrings[3] += fHandler.FloatingToStringAtResolution(Off_Road_Traction, 2);
+	rStrings[4] += fHandler.FloatingToStringAtResolution(Mini_Turbo, 2);
+	rStrings[5] += fHandler.FloatingToStringAtResolution(Ground_Speed, 2);
+	rStrings[6] += fHandler.FloatingToStringAtResolution(Water_Speed, 2);
+	rStrings[7] += fHandler.FloatingToStringAtResolution(Anti_Gravity_Speed, 2);
+	rStrings[8] += fHandler.FloatingToStringAtResolution(Air_Speed, 2);
+	rStrings[9] += fHandler.FloatingToStringAtResolution(Ground_Handling, 2);
+	rStrings[10] += fHandler.FloatingToStringAtResolution(Water_Handling, 2);
+	rStrings[11] += fHandler.FloatingToStringAtResolution(Anti_Gravity_Handling, 2);
+	rStrings[12] += fHandler.FloatingToStringAtResolution(Air_Handling, 2);
+
+	rStrings.insert(rStrings.begin(), Name);
+
+	return rStrings;
 }

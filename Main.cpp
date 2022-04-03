@@ -2,11 +2,13 @@
 #include <vector>
 #include <string>
 
+#include "FileHandler.h"
 #include "MK8DX_Assets.h"
 
 using namespace std;
 
 int main() {
+	FileHandler fHandler = FileHandler();
 	MK8DX_Assets* Assets = new MK8DX_Assets();
 	vector<string> Players;
 
@@ -14,35 +16,43 @@ int main() {
 	string nameFilePath;
 	string ResolvedPath;
 
-	Players.push_back("Esk");
-
 	nameFilePath = nameBaseFilePath;
-	if (Assets->DirectoryExists(nameFilePath) == 0U) {
-		ResolvedPath = Assets->CreateBuildDirectory(nameFilePath);
+	if (fHandler.DirectoryExists(nameFilePath) == 0U) {
+		ResolvedPath = fHandler.CreateFileDirectory(nameFilePath);
 	}
 
 	nameFilePath = (nameBaseFilePath + "/Program Data");
-	if (Assets->DirectoryExists(nameFilePath) == 0U) {
-		ResolvedPath = Assets->CreateBuildDirectory(nameFilePath);
+	if (fHandler.DirectoryExists(nameFilePath) == 0U) {
+		ResolvedPath = fHandler.CreateFileDirectory(nameFilePath);
 	}
-	nameFilePath = (nameBaseFilePath + "/Program Data" + "/Components List");
-	if (Assets->FilesExists(nameFilePath) == 0U) {
+	nameFilePath = (nameBaseFilePath + "/Program Data" + "/ComponentsList");
+	if (fHandler.FilesExists(nameFilePath) == 0U) {
 		Assets->LoadHardcodedComponentData();
-		Assets->WriteComponentDataToFile(nameFilePath);
+		Assets->WriteComponentDataToFile(fHandler, nameFilePath);
 	}
-	else Assets->ReadComponentDataFromFile(nameFilePath);
+	else Assets->ReadComponentDataFromFile(fHandler, nameFilePath);
+
+	nameFilePath = (nameBaseFilePath + "/User Player List");
+	if (fHandler.DirectoryExists(nameFilePath) == 0U) {
+		ResolvedPath = fHandler.CreateFileDirectory(nameFilePath);
+	}
+	nameFilePath = (nameBaseFilePath + "/User Player List" + "/PlayerList");
+	if (fHandler.FilesExists(nameFilePath) == 0U) {
+		for (unsigned int x = 0; (x < 12); x++) Players.push_back("Player " + to_string(x + 1));
+		fHandler.WriteDataToFile(nameFilePath, Players);
+	}
+	else fHandler.ReadDataFromFile(nameFilePath, Players);
 
 	nameFilePath = (nameBaseFilePath + "/Randomized Builds");
-	if (Assets->DirectoryExists(nameFilePath) == 0U) {
-		ResolvedPath = Assets->CreateBuildDirectory(nameFilePath);
+	if (fHandler.DirectoryExists(nameFilePath) == 0U) {
+		ResolvedPath = fHandler.CreateFileDirectory(nameFilePath);
 	}
-
 	nameFilePath = (nameBaseFilePath + "/Randomized Builds" + "/Build");
-	Assets->DeleteBuildDirectory(nameFilePath);
-	ResolvedPath = Assets->CreateBuildDirectory(nameFilePath);
+	//fHandler.DeleteFileDirectory(nameFilePath);
+	ResolvedPath = fHandler.CreateFileDirectory(nameFilePath);
 	for (unsigned int x = 0; (x < Players.size()); x++) {
 		string UniquePath = (ResolvedPath + "/" + Players[x]);
-		Assets->WriteRandomizedBuildToFile(UniquePath, Players[x]);
+		Assets->WriteRandomizedBuildToFile(fHandler, UniquePath, Players[x]);
 	}
 
 	return 0;

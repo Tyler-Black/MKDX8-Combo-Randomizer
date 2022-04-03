@@ -4,11 +4,13 @@
     <ClInclude Include="MK8DX_Assets.h" />
     <ClInclude Include="MK8DX_Asset_Conponent.h" />
     <ClInclude Include="MK8DX_Asset_Build.h" />
+    <ClInclude Include="FileHandler.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MK8DX_Assets.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MK8DX_Asset_Conponent.cpp" />
     <ClCompile Include="MK8DX_Asset_Build.cpp" />
+    <ClCompile Include="FileHandler.cpp" />
   </ItemGroup>
 </Project>

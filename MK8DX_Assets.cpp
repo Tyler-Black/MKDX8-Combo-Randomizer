@@ -241,7 +241,7 @@ void MK8DX_Assets::LoadBodyComponentData() {
 	MasterCycle->CloneFrom(Sneeker); MasterCycle->AssignName("Master Cycle");
 
 	MK8DX_Asset_Conponent* W25SilverArrow = new MK8DX_Asset_Conponent(
-		"W25SilverArrow", -0.25f, 0.25f, 0.5f, 0.5f, 0.25f, -0.25f, 0.25f, -0.25f, 0.0f, 0.25f, 0.25f, 0.25f, 0.0f
+		"W25 Silver Arrow", -0.25f, 0.25f, 0.5f, 0.5f, 0.25f, -0.25f, 0.25f, -0.25f, 0.0f, 0.25f, 0.25f, 0.25f, 0.0f
 	);
 	MK8DX_Asset_Conponent* StandardBike = new MK8DX_Asset_Conponent();
 	MK8DX_Asset_Conponent* FlameRider = new MK8DX_Asset_Conponent();
@@ -433,225 +433,143 @@ void MK8DX_Assets::DeleteGliderComponentData() {
 	}
 }
 
-string MK8DX_Assets::RenameViaIteration(string& FilePath, unsigned int Iteration) {
-	return (FilePath + " (" + to_string(Iteration) + ")");
-}
-unsigned int MK8DX_Assets::FilesExists(string& FilePath) {
-	unsigned int Iteration = 0;
-	bool InstanceFound = false;
-
-	ifstream File(FilePath + ".txt");
-	InstanceFound = File.is_open();
-	File.close();
-
-	if (InstanceFound) {
-		do {
-			Iteration++;
-			File.open(RenameViaIteration(FilePath, Iteration) + ".txt");
-			InstanceFound = File.is_open();
-			File.close();
-		} while (InstanceFound);
-		return Iteration;
-	}
-	else return 0U;
-}
-unsigned int MK8DX_Assets::DirectoryExists(string& FilePath) {
-	unsigned int Iteration = 0;
-	bool InstanceFound = false;
-
-	DWORD Atts = GetFileAttributesA(FilePath.c_str());
-	InstanceFound = (Atts <= 0x400000);
-
-	if (InstanceFound) {
-		do {
-			Iteration++;
-			Atts = GetFileAttributesA(RenameViaIteration(FilePath, Iteration).c_str());
-			InstanceFound = (Atts <= 0x400000);
-		} while (InstanceFound);
-		return Iteration;
-	}
-
-	return 0U;
-}
-
-void MK8DX_Assets::WriteComponentDataToFile(string& FilePath) {
-	unsigned int WriteIteration = FilesExists(FilePath);
-	ofstream File;
-
-	if (WriteIteration == 0U) File.open(FilePath + ".txt");
-	else File.open(RenameViaIteration(FilePath, WriteIteration) + ".txt");
+bool MK8DX_Assets::WriteComponentDataToFile(FileHandler& fHandler, string& FilePath) {
+	vector<string> LinesToFile;
+	vector<string> ComponentLinesToFile;
 
 	for (unsigned int x = 0; (x < Drivers.size()); x++) {
-		File << "dv|";
-		File << Drivers.at(x)->WriteComponentsToString();
-		File << "\n";
+		ComponentLinesToFile = Drivers.at(x)->WriteComponentsToVectorStringWithTag(fHandler);
+		for (unsigned int y = 0; (y < ComponentLinesToFile.size()); y++) {
+			if (y == 0U) LinesToFile.push_back("dv|" + ComponentLinesToFile[y]);
+			else LinesToFile.push_back(ComponentLinesToFile[y]);
+		}
+		LinesToFile.push_back(" ");
 	}
 	for (unsigned int x = 0; (x < Bodies.size()); x++) {
-		File << "bd|";
-		File << Bodies.at(x)->WriteComponentsToString();
-		File << "\n";
+		ComponentLinesToFile = Bodies.at(x)->WriteComponentsToVectorStringWithTag(fHandler);
+		for (unsigned int y = 0; (y < ComponentLinesToFile.size()); y++) {
+			if (y == 0U) LinesToFile.push_back("bd|" + ComponentLinesToFile[y]);
+			else LinesToFile.push_back(ComponentLinesToFile[y]);
+		}
+		LinesToFile.push_back(" ");
 	}
 	for (unsigned int x = 0; (x < Tires.size()); x++) {
-		File << "tr|";
-		File << Tires.at(x)->WriteComponentsToString();
-		File << "\n";
+		ComponentLinesToFile = Tires.at(x)->WriteComponentsToVectorStringWithTag(fHandler);
+		for (unsigned int y = 0; (y < ComponentLinesToFile.size()); y++) {
+			if (y == 0U) LinesToFile.push_back("tr|" + ComponentLinesToFile[y]);
+			else LinesToFile.push_back(ComponentLinesToFile[y]);
+		}
+		LinesToFile.push_back(" ");
 	}
 	for (unsigned int x = 0; (x < Gliders.size()); x++) {
-		File << "gd|";
-		File << Gliders.at(x)->WriteComponentsToString();
-		File << "\n";
+		ComponentLinesToFile = Gliders.at(x)->WriteComponentsToVectorStringWithTag(fHandler);
+		for (unsigned int y = 0; (y < ComponentLinesToFile.size()); y++) {
+			if (y == 0U) LinesToFile.push_back("gd|" + ComponentLinesToFile[y]);
+			else LinesToFile.push_back(ComponentLinesToFile[y]);
+		}
+		LinesToFile.push_back(" ");
 	}
 
-	if (File.is_open()) File.close();
+	return fHandler.WriteDataToFile(FilePath, LinesToFile);
 }
-void MK8DX_Assets::ReadComponentDataFromFile(string& FilePath) {
-	unsigned int WriteIteration = FilesExists(FilePath);
-	ifstream File;
-
-	string FileLine;
-	string ReadLine;
+bool MK8DX_Assets::ReadComponentDataFromFile(FileHandler& fHandler, string& FilePath) {
+	vector<string> LinesFromFile;
+	vector<int> FileLineFilterWhitelist;
+	vector <string> ReadLineHeaderPrefixs;
 	string ReadLineHeaderPrefix;
-	int CharCode;
+	string ReadLineStatPrefix;
+	string FileTagStatPrefix;
 	int EntryHeaderSeporatorIndex;
+	int CharCode;
 
 	vector<MK8DX_Asset_Conponent*>* AssetListPtr = nullptr;
 	vector<string*>* ComponentFileTagListPtr = nullptr;
-
 	MK8DX_Asset_Conponent* newConponentEntry = nullptr;
 
-	if (WriteIteration > 0U) {
-		File.open(FilePath + ".txt");
+	bool Success = fHandler.ReadDataFromFile(FilePath, LinesFromFile);
+	if (!Success) return false;
 
-		while (getline(File, FileLine)) {
-			ReadLine = "";
-			CharCode = -1;
-			EntryHeaderSeporatorIndex = -1;
+	FileLineFilterWhitelist.push_back(32); // Space [ ]
+	FileLineFilterWhitelist.push_back(124); // Bar [|]
+	FileLineFilterWhitelist.push_back(46); // Period [.]
+	for (unsigned int x = 48; (x <= 57); x++) FileLineFilterWhitelist.push_back(x); // Numbers [0-9]
+	for (unsigned int x = 65; (x <= 90); x++) FileLineFilterWhitelist.push_back(x); // Upper [A-Z]
+	for (unsigned int x = 97; (x <= 122); x++) FileLineFilterWhitelist.push_back(x); // Lower [a-z]
 
-			for (size_t x = 0; (x < FileLine.length()); x++) {
-				CharCode = (int)(FileLine.c_str()[x]);
-				if (
-					(CharCode >= 32)
-					|| (CharCode >= 124)
-					|| ((CharCode >= 48) && (CharCode <= 57))
-					|| ((CharCode >= 65) && (CharCode <= 90))
-					|| ((CharCode >= 97) && (CharCode <= 122))
-				) {
-					ReadLine += (FileLine.c_str()[x]);
-				}
-				if (CharCode >= 124) EntryHeaderSeporatorIndex = x;
+	ReadLineHeaderPrefixs.push_back("dv");
+	ReadLineHeaderPrefixs.push_back("bd");
+	ReadLineHeaderPrefixs.push_back("tr");
+	ReadLineHeaderPrefixs.push_back("gd");
+	
+	for (unsigned int x = 0; (x < LinesFromFile.size()); x++) {
+		EntryHeaderSeporatorIndex = -1;
+		CharCode = -1;
+		Success = fHandler.FilterFileLineViaCharCodes(LinesFromFile[x], FileLineFilterWhitelist);
+
+		for (size_t y = 0; (y < LinesFromFile[x].length()); y++) {
+			CharCode = (int)(LinesFromFile[x].c_str()[y]);
+			if (CharCode >= 124) {
+				EntryHeaderSeporatorIndex = y;
+				break;
 			}
-			if (ReadLine.length() > 0) {
-				for (size_t x = (ReadLine.length() - 1); (x >= 0); x--) {
-					CharCode = (int)(FileLine.c_str()[x]);
-					if (CharCode != 32) {
-						if (x < (ReadLine.length() - 1)) ReadLine = ReadLine.substr(0, (x + 1));
-						break;
-					}
-				}
-				for (size_t x = 0; (x < ReadLine.length()); x++) {
-					CharCode = (int)(FileLine.c_str()[x]);
-					if (CharCode != 32) {
-						if (x > 0) ReadLine = ReadLine.substr(x, (ReadLine.length() - 1));
-						break;
-					}
-				}
-			}
-			
-			if (EntryHeaderSeporatorIndex >= 0) {
-				ReadLineHeaderPrefix = ReadLine.substr(0, EntryHeaderSeporatorIndex);
-				if (
-					(ReadLineHeaderPrefix == "dv") || (ReadLineHeaderPrefix == "bd")
-					|| (ReadLineHeaderPrefix == "tr") || (ReadLineHeaderPrefix == "gd")
-				) {
+		}
+		if (EntryHeaderSeporatorIndex >= 0) {
+			ReadLineHeaderPrefix = LinesFromFile[x].substr(0, EntryHeaderSeporatorIndex);
+
+			for (size_t y = 0; (y < ReadLineHeaderPrefixs.size()); y++) {
+				if (ReadLineHeaderPrefix == ReadLineHeaderPrefixs[y]) {
 					if (newConponentEntry != nullptr) AssetListPtr->push_back(newConponentEntry);
 					newConponentEntry = new MK8DX_Asset_Conponent();
 					newConponentEntry->AssignValueByFileTag(
 						"name",
-						ReadLine.substr((EntryHeaderSeporatorIndex + 1), (ReadLine.length() - 1))
+						LinesFromFile[x].substr((EntryHeaderSeporatorIndex + 1), (LinesFromFile[x].length() - 1))
 					);
+					break;
 				}
-				if (ReadLineHeaderPrefix == "dv") AssetListPtr = &Drivers;
-				else if (ReadLineHeaderPrefix == "bd") AssetListPtr = &Bodies;
-				else if (ReadLineHeaderPrefix == "tr") AssetListPtr = &Tires;
-				else if (ReadLineHeaderPrefix == "gd") AssetListPtr = &Gliders;
 			}
-			else {
-				if (AssetListPtr != nullptr) {
-					ComponentFileTagListPtr = &newConponentEntry->GetComponentFileTags();
-					
-					for (unsigned int x = 0; (x < ComponentFileTagListPtr->size()); x++) {
-						if (
-							ReadLine.substr(0, ComponentFileTagListPtr->at(x)->length())
-							== ComponentFileTagListPtr->at(x)->c_str()
-						) {
-							newConponentEntry->AssignValueByFileTag(
-								*ComponentFileTagListPtr->at(x),
-								stof(
-									ReadLine.substr(ComponentFileTagListPtr->at(x)->length(),
-									(ReadLine.length() - 1))
-								)
-							);
-							break;
-						}
+			if (ReadLineHeaderPrefix == "dv") AssetListPtr = &Drivers;
+			else if (ReadLineHeaderPrefix == "bd") AssetListPtr = &Bodies;
+			else if (ReadLineHeaderPrefix == "tr") AssetListPtr = &Tires;
+			else if (ReadLineHeaderPrefix == "gd") AssetListPtr = &Gliders;
+			else AssetListPtr = nullptr;
+		}
+		else {
+			if (AssetListPtr != nullptr) {
+				ComponentFileTagListPtr = &newConponentEntry->GetComponentFileTags();
+
+				for (unsigned int y = 0; (y < ComponentFileTagListPtr->size()); y++) {
+					ReadLineStatPrefix = LinesFromFile[x].substr(0, ComponentFileTagListPtr->at(y)->length());
+					FileTagStatPrefix = *ComponentFileTagListPtr->at(y);
+
+					if (ReadLineStatPrefix == FileTagStatPrefix.c_str()) {
+						newConponentEntry->AssignValueByFileTag(
+							FileTagStatPrefix,
+							stof(LinesFromFile[x].substr(FileTagStatPrefix.length(), (LinesFromFile[x].length() - 1)))
+						);
+						break;
 					}
 				}
 			}
 		}
-		if (File.peek() == EOF) {
+		if ((x + 1) >= LinesFromFile.size()) {
 			if (newConponentEntry != nullptr) AssetListPtr->push_back(newConponentEntry);
 		}
 	}
-
-	if (File.is_open()) File.close();
 }
 
-string MK8DX_Assets::CreateBuildDirectory(string& FilePath) {
-	unsigned int WriteIteration = DirectoryExists(FilePath);
-	string Directory;
+bool MK8DX_Assets::WriteRandomizedBuildToFile(FileHandler& fHandler, string& FilePath, string& Username) {
+	MK8DX_Asset_Build* Build;
+	vector<string> LinesToFile;
+	vector<string> ComponentLinesToFile;
 
-	if (WriteIteration == 0U) Directory = FilePath;
-	else Directory = RenameViaIteration(FilePath, WriteIteration);
-	CreateDirectoryA(Directory.c_str(), NULL);
+	if (!((Drivers.size() > 0) && (Bodies.size() > 0) && (Tires.size() > 0) && (Gliders.size() > 0))) return false;
 
-	return Directory;
-}
-void MK8DX_Assets::DeleteBuildDirectory(string& FilePath) {
-	unsigned int WriteIteration;
-	string Directory;
-
-	do {
-		WriteIteration = DirectoryExists(FilePath);
-		if (WriteIteration == 0U) break;
-		else if (WriteIteration == 1U) Directory = FilePath;
-		else Directory = RenameViaIteration(FilePath, (WriteIteration - 1));
-		if (WriteIteration > 0U) {
-			for (const auto& entry : filesystem::directory_iterator(Directory)) {
-				filesystem::remove_all(entry.path());
-			}
-			RemoveDirectoryA(Directory.c_str());
-		}
-	} while (WriteIteration > 1U);
-}
-void MK8DX_Assets::WriteRandomizedBuildToFile(string& FilePath, string& Username) {
-	unsigned int WriteIteration;
-	ofstream File;
-	MK8DX_Asset_Build* Build = nullptr;
-
-	if (!((Drivers.size() > 0) && (Bodies.size() > 0) && (Tires.size() > 0) && (Gliders.size() > 0))) return;
-
-	WriteIteration = FilesExists(FilePath);
-	if (WriteIteration == 0U) File.open(FilePath + ".txt");
-	else File.open(RenameViaIteration(FilePath, WriteIteration) + ".txt");
-
-	default_random_engine RandGenerator;
-	uniform_int_distribution<int> DriverDistribution(0, Drivers.size());
-	uniform_int_distribution<int> BodyDistribution(0, Bodies.size());
-	uniform_int_distribution<int> TireDistribution(0, Tires.size());
-	uniform_int_distribution<int> GliderDistribution(0, Gliders.size());
-
-	/*
-		Find better ways to generate random numbers
-	*/
+	random_device RandDevice;
+	default_random_engine RandGenerator(RandDevice());
+	uniform_int_distribution<int> DriverDistribution(0, (Drivers.size() - 1));
+	uniform_int_distribution<int> BodyDistribution(0, (Bodies.size() - 1));
+	uniform_int_distribution<int> TireDistribution(0, (Tires.size() - 1));
+	uniform_int_distribution<int> GliderDistribution(0, (Gliders.size() - 1));
 
 	Build = new MK8DX_Asset_Build();
 	Build->AssignDriver(Drivers[DriverDistribution(RandGenerator)]);
@@ -659,8 +577,53 @@ void MK8DX_Assets::WriteRandomizedBuildToFile(string& FilePath, string& Username
 	Build->AssignTires(Tires[TireDistribution(RandGenerator)]);
 	Build->AssignGlider(Gliders[GliderDistribution(RandGenerator)]);
 
-	File << (Username + "\n");
-	File << ("Driver: " + Build->GetDriver()->GetName() + "\n");
+	LinesToFile.push_back(">>: " + Username + " :<<");
+	LinesToFile.push_back(" ");
+	LinesToFile.push_back("Driver: " + Build->GetDriver()->GetName());
+	LinesToFile.push_back("Body:   " + Build->GetBody()->GetName());
+	LinesToFile.push_back("Tires:  " + Build->GetTires()->GetName());
+	LinesToFile.push_back("Glider: " + Build->GetGlider()->GetName());
+	LinesToFile.push_back(" ");
 
-	if (File.is_open()) File.close();
+	auto OutputType1 = [&]() {
+		ComponentLinesToFile = Build->GetDriver()->WriteToVectorStringWithTag(fHandler);
+		for (unsigned int x = 0; (x < ComponentLinesToFile.size()); x++) ComponentLinesToFile[x] += " ";
+		ComponentLinesToFile[0] += fHandler.FloatingToStringAtResolution(Build->CalculateWeight(), 2);
+		ComponentLinesToFile[1] += fHandler.FloatingToStringAtResolution(Build->CalculateAcceleration(), 2);
+		ComponentLinesToFile[2] += fHandler.FloatingToStringAtResolution(Build->CalculateOn_Road_Traction(), 2);
+		ComponentLinesToFile[3] += fHandler.FloatingToStringAtResolution(Build->CalculateOff_Road_Traction(), 2);
+		ComponentLinesToFile[4] += fHandler.FloatingToStringAtResolution(Build->CalculateMini_Turbo(), 2);
+		ComponentLinesToFile[5] += fHandler.FloatingToStringAtResolution(Build->CalculateGround_Speed(), 2);
+		ComponentLinesToFile[6] += fHandler.FloatingToStringAtResolution(Build->CalculateWater_Speed(), 2);
+		ComponentLinesToFile[7] += fHandler.FloatingToStringAtResolution(Build->CalculateAnti_Gravity_Speed(), 2);
+		ComponentLinesToFile[8] += fHandler.FloatingToStringAtResolution(Build->CalculateAir_Speed(), 2);
+		ComponentLinesToFile[9] += fHandler.FloatingToStringAtResolution(Build->CalculateGround_Handling(), 2);
+		ComponentLinesToFile[10] += fHandler.FloatingToStringAtResolution(Build->CalculateWater_Handling(), 2);
+		ComponentLinesToFile[11] += fHandler.FloatingToStringAtResolution(Build->CalculateAnti_Gravity_Handling(), 2);
+		ComponentLinesToFile[12] += fHandler.FloatingToStringAtResolution(Build->CalculateAir_Handling(), 2);
+		for (unsigned int x = 0; (x < ComponentLinesToFile.size()); x++)
+			LinesToFile.push_back(ComponentLinesToFile[x]);
+	};
+	auto OutputType2 = [&]() {
+		LinesToFile.push_back("Weight:                " + fHandler.FloatingToStringAtResolution(Build->CalculateWeight(), 2));
+		LinesToFile.push_back("Acceleration:          " + fHandler.FloatingToStringAtResolution(Build->CalculateAcceleration(), 2));
+		LinesToFile.push_back("On Road Traction:      " + fHandler.FloatingToStringAtResolution(Build->CalculateOn_Road_Traction(), 2));
+		LinesToFile.push_back("Off Road Traction:     " + fHandler.FloatingToStringAtResolution(Build->CalculateOff_Road_Traction(), 2));
+		LinesToFile.push_back("Mini Turbo:            " + fHandler.FloatingToStringAtResolution(Build->CalculateMini_Turbo(), 2));
+		LinesToFile.push_back(" ");
+		LinesToFile.push_back("Ground Speed:          " + fHandler.FloatingToStringAtResolution(Build->CalculateGround_Speed(), 2));
+		LinesToFile.push_back("Water Speed:           " + fHandler.FloatingToStringAtResolution(Build->CalculateWater_Speed(), 2));
+		LinesToFile.push_back("Anti Gravity Speed:    " + fHandler.FloatingToStringAtResolution(Build->CalculateAnti_Gravity_Speed(), 2));
+		LinesToFile.push_back("Air Speed:             " + fHandler.FloatingToStringAtResolution(Build->CalculateAir_Speed(), 2));
+		LinesToFile.push_back(" ");
+		LinesToFile.push_back("Ground Handling:       " + fHandler.FloatingToStringAtResolution(Build->CalculateGround_Handling(), 2));
+		LinesToFile.push_back("Water Handling:        " + fHandler.FloatingToStringAtResolution(Build->CalculateWater_Handling(), 2));
+		LinesToFile.push_back("Anti Gravity Handling: " + fHandler.FloatingToStringAtResolution(Build->CalculateAnti_Gravity_Handling(), 2));
+		LinesToFile.push_back("Air Handling:          " + fHandler.FloatingToStringAtResolution(Build->CalculateAir_Handling(), 2));
+	};
+
+	OutputType2();
+	fHandler.WriteDataToFile(FilePath, LinesToFile);
+
+	return true;
 }

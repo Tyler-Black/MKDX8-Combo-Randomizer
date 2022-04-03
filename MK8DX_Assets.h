@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 
+#include "FileHandler.h"
 #include "MK8DX_Asset_Conponent.h"
 #include "MK8DX_Asset_Build.h"
 
@@ -35,14 +36,8 @@ public:
 	void DeleteTireComponentData();
 	void DeleteGliderComponentData();
 
-	string RenameViaIteration(string& FilePath, unsigned int Iteration);
-	unsigned int FilesExists(string& FilePath);
-	unsigned int DirectoryExists(string& FilePath);
+	bool WriteComponentDataToFile(FileHandler& fHandler, string& FilePath);
+	bool ReadComponentDataFromFile(FileHandler& fHandler, string& FilePath);
 
-	void WriteComponentDataToFile(string& FilePath);
-	void ReadComponentDataFromFile(string& FilePath);
-
-	string CreateBuildDirectory(string& FilePath);
-	void DeleteBuildDirectory(string& FilePath);
-	void WriteRandomizedBuildToFile(string& FilePath, string& Username);
+	bool WriteRandomizedBuildToFile(FileHandler& fHandler, string& FilePath, string& Username);
 };
