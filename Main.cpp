@@ -19,7 +19,7 @@ int WINAPI WinMain(
 	GetUserNameA(WinUserName, &WinUserNameSize);
 	
 	strWinUserName = WinUserName;
-	string nameBaseFilePath = "C:/Users/" + strWinUserName + "/Documents/MK8DX Randomizer Assets";
+	string nameBaseFilePath = "C:/Users/" + strWinUserName + "/Documents/MKDX8-Combo-Randomizer";
 	string nameFilePath;
 	string ResolvedPath;
 
