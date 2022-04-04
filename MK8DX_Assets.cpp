@@ -433,7 +433,32 @@ void MK8DX_Assets::DeleteGliderComponentData() {
 	}
 }
 
-bool MK8DX_Assets::WriteComponentDataToFile(FileHandler& fHandler, string& FilePath) {
+void MK8DX_Assets::AddAllComponentDataToWhitelist() {
+	RemoveAllComponentDataToWhitelist();
+	for (unsigned int x = 0; (x < Drivers.size()); x++) {
+		DriverWhiteList.push_back(Drivers.at(x)->GetName());
+	}
+	for (unsigned int x = 0; (x < Bodies.size()); x++) {
+		BodiesWhiteList.push_back(Bodies.at(x)->GetName());
+	}
+	for (unsigned int x = 0; (x < Tires.size()); x++) {
+		TiresWhiteList.push_back(Tires.at(x)->GetName());
+	}
+	for (unsigned int x = 0; (x < Gliders.size()); x++) {
+		GlidersWhiteList.push_back(Gliders.at(x)->GetName());
+	}
+}
+void MK8DX_Assets::RemoveAllComponentDataToWhitelist() {
+	DriverWhiteList.clear();
+	BodiesWhiteList.clear();
+	TiresWhiteList.clear();
+	GlidersWhiteList.clear();
+}
+
+bool MK8DX_Assets::WriteComponentDataToFile(
+	FileHandler& fHandler,
+	string& FilePath
+) {
 	vector<string> LinesToFile;
 	vector<string> ComponentLinesToFile;
 
@@ -472,7 +497,10 @@ bool MK8DX_Assets::WriteComponentDataToFile(FileHandler& fHandler, string& FileP
 
 	return fHandler.WriteDataToFile(FilePath, LinesToFile);
 }
-bool MK8DX_Assets::ReadComponentDataFromFile(FileHandler& fHandler, string& FilePath) {
+bool MK8DX_Assets::ReadComponentDataFromFile(
+	FileHandler& fHandler,
+	string& FilePath
+) {
 	vector<string> LinesFromFile;
 	vector<int> FileLineFilterWhitelist;
 	vector <string> ReadLineHeaderPrefixs;
@@ -522,7 +550,10 @@ bool MK8DX_Assets::ReadComponentDataFromFile(FileHandler& fHandler, string& File
 					newConponentEntry = new MK8DX_Asset_Conponent();
 					newConponentEntry->AssignValueByFileTag(
 						"name",
-						LinesFromFile[x].substr((EntryHeaderSeporatorIndex + 1), (LinesFromFile[x].length() - 1))
+						LinesFromFile[x].substr(
+							(EntryHeaderSeporatorIndex + 1),
+							(LinesFromFile[x].length() - 1)
+						)
 					);
 					break;
 				}
@@ -538,13 +569,17 @@ bool MK8DX_Assets::ReadComponentDataFromFile(FileHandler& fHandler, string& File
 				ComponentFileTagListPtr = &newConponentEntry->GetComponentFileTags();
 
 				for (unsigned int y = 0; (y < ComponentFileTagListPtr->size()); y++) {
-					ReadLineStatPrefix = LinesFromFile[x].substr(0, ComponentFileTagListPtr->at(y)->length());
+					ReadLineStatPrefix =
+						LinesFromFile[x].substr(0, ComponentFileTagListPtr->at(y)->length());
 					FileTagStatPrefix = *ComponentFileTagListPtr->at(y);
 
 					if (ReadLineStatPrefix == FileTagStatPrefix.c_str()) {
 						newConponentEntry->AssignValueByFileTag(
 							FileTagStatPrefix,
-							stof(LinesFromFile[x].substr(FileTagStatPrefix.length(), (LinesFromFile[x].length() - 1)))
+							stof(
+								LinesFromFile[x].substr(FileTagStatPrefix.length(),
+									(LinesFromFile[x].length() - 1))
+							)
 						);
 						break;
 					}
@@ -557,25 +592,239 @@ bool MK8DX_Assets::ReadComponentDataFromFile(FileHandler& fHandler, string& File
 	}
 }
 
-bool MK8DX_Assets::WriteRandomizedBuildToFile(FileHandler& fHandler, string& FilePath, string& Username) {
+bool MK8DX_Assets::WriteComponentWhitelistToFile(
+	FileHandler& fHandler,
+	string& FilePath
+) {
+	vector<string> LinesToFile;
+	vector<string> ComponentLinesToFile;
+	string StateTag;
+	bool isWhitelisted;
+
+	string StateTags[] = {" ", "x"};
+
+	for (unsigned int x = 0; (x < Drivers.size()); x++) {
+		ComponentLinesToFile = Drivers.at(x)->WriteComponentsToVectorStringWithTag(fHandler);
+		if (ComponentLinesToFile.size() > 0) {
+			isWhitelisted = false;
+			for (unsigned int y = 0; (y < DriverWhiteList.size()); y++) {
+				isWhitelisted =
+					(Drivers.at(x)->GetName() == DriverWhiteList[y]);
+				if (isWhitelisted) break;
+			}
+			if (isWhitelisted) StateTag = StateTags[1];
+			else StateTag = StateTags[0];
+			LinesToFile.push_back("dv|" + StateTag + "|" + ComponentLinesToFile[0]);
+		}
+	}
+	LinesToFile.push_back(" ");
+	for (unsigned int x = 0; (x < Bodies.size()); x++) {
+		ComponentLinesToFile = Bodies.at(x)->WriteComponentsToVectorStringWithTag(fHandler);
+		if (ComponentLinesToFile.size() > 0) {
+			isWhitelisted = false;
+			for (unsigned int y = 0; (y < BodiesWhiteList.size()); y++) {
+				isWhitelisted =
+					(Bodies.at(x)->GetName() == BodiesWhiteList[y]);
+				if (isWhitelisted) break;
+			}
+			if (isWhitelisted) StateTag = StateTags[1];
+			else StateTag = StateTags[0];
+			LinesToFile.push_back("bd|" + StateTag + "|" + ComponentLinesToFile[0]);
+		}
+	}
+	LinesToFile.push_back(" ");
+	for (unsigned int x = 0; (x < Tires.size()); x++) {
+		ComponentLinesToFile = Tires.at(x)->WriteComponentsToVectorStringWithTag(fHandler);
+		if (ComponentLinesToFile.size() > 0) {
+			isWhitelisted = false;
+			for (unsigned int y = 0; (y < TiresWhiteList.size()); y++) {
+				isWhitelisted =
+					(Tires.at(x)->GetName() == TiresWhiteList[y]);
+				if (isWhitelisted) break;
+			}
+			if (isWhitelisted) StateTag = StateTags[1];
+			else StateTag = StateTags[0];
+			LinesToFile.push_back("tr|" + StateTag + "|" + ComponentLinesToFile[0]);
+		}
+	}
+	LinesToFile.push_back(" ");
+	for (unsigned int x = 0; (x < Gliders.size()); x++) {
+		ComponentLinesToFile = Gliders.at(x)->WriteComponentsToVectorStringWithTag(fHandler);
+		if (ComponentLinesToFile.size() > 0) {
+			isWhitelisted = false;
+			for (unsigned int y = 0; (y < GlidersWhiteList.size()); y++) {
+				isWhitelisted =
+					(Gliders.at(x)->GetName() == GlidersWhiteList[y]);
+				if (isWhitelisted) break;
+			}
+			if (isWhitelisted) StateTag = StateTags[1];
+			else StateTag = StateTags[0];
+			LinesToFile.push_back("gd|" + StateTag + "|" + ComponentLinesToFile[0]);
+		}
+	}
+
+	return fHandler.WriteDataToFile(FilePath, LinesToFile);
+}
+bool MK8DX_Assets::ReadComponentWhitelistFromFile(
+	FileHandler& fHandler,
+	string& FilePath
+) {
+	vector<string> LinesFromFile;
+	vector<int> FileLineFilterWhitelist;
+	vector <string> ReadLineHeaderPrefixs;
+	string ReadLineHeaderPrefix;
+	string ReadLineStateValue;
+	int EntryHeaderSeporatorIndex[2];
+	int CharCode;
+
+	string StateTags[] = { " ", "x" };
+	bool isWhitelisted;
+
+	vector<string>* AssetListPtr = nullptr;
+
+	bool Success = fHandler.ReadDataFromFile(FilePath, LinesFromFile);
+	if (!Success) return false;
+
+	FileLineFilterWhitelist.push_back(32); // Space [ ]
+	FileLineFilterWhitelist.push_back(124); // Bar [|]
+	FileLineFilterWhitelist.push_back(46); // Period [.]
+	for (unsigned int x = 48; (x <= 57); x++) FileLineFilterWhitelist.push_back(x); // Numbers [0-9]
+	for (unsigned int x = 65; (x <= 90); x++) FileLineFilterWhitelist.push_back(x); // Upper [A-Z]
+	for (unsigned int x = 97; (x <= 122); x++) FileLineFilterWhitelist.push_back(x); // Lower [a-z]
+
+	ReadLineHeaderPrefixs.push_back("dv");
+	ReadLineHeaderPrefixs.push_back("bd");
+	ReadLineHeaderPrefixs.push_back("tr");
+	ReadLineHeaderPrefixs.push_back("gd");
+
+	for (unsigned int x = 0; (x < LinesFromFile.size()); x++) {
+		EntryHeaderSeporatorIndex[0] = -1;
+		EntryHeaderSeporatorIndex[1] = -1;
+		CharCode = -1;
+		Success = fHandler.FilterFileLineViaCharCodes(LinesFromFile[x], FileLineFilterWhitelist);
+
+		for (size_t y = 0; (y < LinesFromFile[x].length()); y++) {
+			CharCode = (int)(LinesFromFile[x].c_str()[y]);
+			if (CharCode >= 124) {
+				if (EntryHeaderSeporatorIndex[0] < 0) {
+					EntryHeaderSeporatorIndex[0] = y;
+				}
+				else if (EntryHeaderSeporatorIndex[1] < 0) {
+					EntryHeaderSeporatorIndex[1] = y;
+					break;
+				}
+			}
+		}
+		if ((EntryHeaderSeporatorIndex[0] >= 0) && (EntryHeaderSeporatorIndex[1] >= 0)) {
+			ReadLineHeaderPrefix = LinesFromFile[x].substr(0, EntryHeaderSeporatorIndex[0]);
+
+			for (size_t y = 0; (y < ReadLineHeaderPrefixs.size()); y++) {
+				isWhitelisted = false;
+
+				if (ReadLineHeaderPrefix == ReadLineHeaderPrefixs[y]) {
+					ReadLineStateValue = LinesFromFile[x].substr(
+							(EntryHeaderSeporatorIndex[0] + 1),
+							(EntryHeaderSeporatorIndex[1] - EntryHeaderSeporatorIndex[0] - 1)
+					);
+					for (char& e : ReadLineStateValue) e = tolower(e);
+					isWhitelisted = (ReadLineStateValue == StateTags[1]);
+				}
+				if (isWhitelisted) {
+					if (ReadLineHeaderPrefix == "dv") AssetListPtr = &DriverWhiteList;
+					else if (ReadLineHeaderPrefix == "bd") AssetListPtr = &BodiesWhiteList;
+					else if (ReadLineHeaderPrefix == "tr") AssetListPtr = &TiresWhiteList;
+					else if (ReadLineHeaderPrefix == "gd") AssetListPtr = &GlidersWhiteList;
+					else AssetListPtr = nullptr;
+					if (AssetListPtr != nullptr) {
+						AssetListPtr->push_back(
+							LinesFromFile[x].substr(
+								(EntryHeaderSeporatorIndex[1] + 1),
+								(LinesFromFile[x].length() - 1)
+							)
+						);
+					}
+				}
+			}
+		}
+	}
+}
+
+bool MK8DX_Assets::GetComponentIsWhitelisted(
+	MK8DX_Asset_Conponent* Component,
+	vector<string>& WhiteList
+) {
+	for (unsigned int x = 0; (x < WhiteList.size()); x++) {
+		if (Component->GetName() == WhiteList[x]) return true;
+	}
+	return false;
+}
+
+int MK8DX_Assets::GetComponentIndexOfWhitelistIndex(
+	int WhiteListIndex,
+	vector<string>& WhiteList,
+	vector<MK8DX_Asset_Conponent*>& ComponentList
+) {
+	string TargetName = WhiteList[WhiteListIndex];
+	for (unsigned int x = 0; (x < ComponentList.size()); x++) {
+		if (TargetName == ComponentList[x]->GetName()) return x;
+	}
+	return -1;
+}
+
+bool MK8DX_Assets::WriteRandomizedBuildToFile(
+	FileHandler& fHandler,
+	string& FilePath,
+	string& Username
+) {
 	MK8DX_Asset_Build* Build;
 	vector<string> LinesToFile;
 	vector<string> ComponentLinesToFile;
 
-	if (!((Drivers.size() > 0) && (Bodies.size() > 0) && (Tires.size() > 0) && (Gliders.size() > 0))) return false;
+	if (
+		!((Drivers.size() > 0) && (Bodies.size() > 0)
+		&& (Tires.size() > 0) && (Gliders.size() > 0))
+	) return false;
+	if (
+		!((DriverWhiteList.size() > 0) && (BodiesWhiteList.size() > 0)
+		&& (TiresWhiteList.size() > 0) && (GlidersWhiteList.size() > 0))
+	) return false;
 
 	random_device RandDevice;
 	default_random_engine RandGenerator(RandDevice());
-	uniform_int_distribution<int> DriverDistribution(0, (Drivers.size() - 1));
-	uniform_int_distribution<int> BodyDistribution(0, (Bodies.size() - 1));
-	uniform_int_distribution<int> TireDistribution(0, (Tires.size() - 1));
-	uniform_int_distribution<int> GliderDistribution(0, (Gliders.size() - 1));
+	uniform_int_distribution<int> DriverDistribution(0, (DriverWhiteList.size() - 1));
+	uniform_int_distribution<int> BodyDistribution(0, (BodiesWhiteList.size() - 1));
+	uniform_int_distribution<int> TireDistribution(0, (TiresWhiteList.size() - 1));
+	uniform_int_distribution<int> GliderDistribution(0, (GlidersWhiteList.size() - 1));
 
 	Build = new MK8DX_Asset_Build();
-	Build->AssignDriver(Drivers[DriverDistribution(RandGenerator)]);
-	Build->AssignBody(Bodies[BodyDistribution(RandGenerator)]);
-	Build->AssignTires(Tires[TireDistribution(RandGenerator)]);
-	Build->AssignGlider(Gliders[GliderDistribution(RandGenerator)]);
+	Build->AssignDriver(
+		Drivers[
+			GetComponentIndexOfWhitelistIndex(
+				DriverDistribution(RandGenerator), DriverWhiteList, Drivers
+			)
+		]
+	);
+	Build->AssignBody(
+		Bodies[
+			GetComponentIndexOfWhitelistIndex(
+				BodyDistribution(RandGenerator), BodiesWhiteList, Bodies
+			)
+		]
+	);
+	Build->AssignTires(
+		Tires[
+			GetComponentIndexOfWhitelistIndex(
+				TireDistribution(RandGenerator), TiresWhiteList, Tires
+			)
+		]
+	);
+	Build->AssignGlider(
+		Gliders[
+			GetComponentIndexOfWhitelistIndex(
+				GliderDistribution(RandGenerator), GlidersWhiteList, Gliders
+			)
+		]
+	);
 
 	LinesToFile.push_back(">>: " + Username + " :<<");
 	LinesToFile.push_back(" ");

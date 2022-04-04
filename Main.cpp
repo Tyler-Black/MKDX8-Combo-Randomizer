@@ -38,6 +38,12 @@ int WINAPI WinMain(
 		Assets->WriteComponentDataToFile(fHandler, nameFilePath);
 	}
 	else Assets->ReadComponentDataFromFile(fHandler, nameFilePath);
+	nameFilePath = (nameBaseFilePath + "/Program Data" + "/ComponentsWhitelist");
+	if (fHandler.FilesExists(nameFilePath) == 0U) {
+		Assets->AddAllComponentDataToWhitelist();
+		Assets->WriteComponentWhitelistToFile(fHandler, nameFilePath);
+	}
+	else Assets->ReadComponentWhitelistFromFile(fHandler, nameFilePath);
 
 	nameFilePath = (nameBaseFilePath + "/User Player List");
 	if (fHandler.DirectoryExists(nameFilePath) == 0U) {
