@@ -32,12 +32,14 @@ int WINAPI WinMain(
 	if (fHandler.DirectoryExists(nameFilePath) == 0U) {
 		ResolvedPath = fHandler.CreateFileDirectory(nameFilePath);
 	}
+
 	nameFilePath = (nameBaseFilePath + "/Program Data" + "/ComponentsList");
 	if (fHandler.FilesExists(nameFilePath) == 0U) {
 		Assets->LoadHardcodedComponentData();
 		Assets->WriteComponentDataToFile(fHandler, nameFilePath);
 	}
 	else Assets->ReadComponentDataFromFile(fHandler, nameFilePath);
+
 	nameFilePath = (nameBaseFilePath + "/Program Data" + "/ComponentsWhitelist");
 	if (fHandler.FilesExists(nameFilePath) == 0U) {
 		Assets->AddAllComponentDataToWhitelist();
@@ -45,11 +47,7 @@ int WINAPI WinMain(
 	}
 	else Assets->ReadComponentWhitelistFromFile(fHandler, nameFilePath);
 
-	nameFilePath = (nameBaseFilePath + "/User Player List");
-	if (fHandler.DirectoryExists(nameFilePath) == 0U) {
-		ResolvedPath = fHandler.CreateFileDirectory(nameFilePath);
-	}
-	nameFilePath = (nameBaseFilePath + "/User Player List" + "/PlayerList");
+	nameFilePath = (nameBaseFilePath + "/Program Data" + "/PlayerList");
 	if (fHandler.FilesExists(nameFilePath) == 0U) {
 		for (unsigned int x = 0; (x < 12); x++) Players.push_back("Player " + to_string(x + 1));
 		fHandler.WriteDataToFile(nameFilePath, Players);
@@ -60,6 +58,7 @@ int WINAPI WinMain(
 	if (fHandler.DirectoryExists(nameFilePath) == 0U) {
 		ResolvedPath = fHandler.CreateFileDirectory(nameFilePath);
 	}
+
 	nameFilePath = (nameBaseFilePath + "/Randomized Builds" + "/Build");
 	//fHandler.DeleteFileDirectory(nameFilePath);
 	ResolvedPath = fHandler.CreateFileDirectory(nameFilePath);
